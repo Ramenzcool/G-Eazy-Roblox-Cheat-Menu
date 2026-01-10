@@ -1,0 +1,164 @@
+
+
+
+-- SERVICES
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+-- CHARACTER HANDLER
+local function getChar()
+	return player.Character or player.CharacterAdded:Wait()
+end
+
+-- GUI
+-- GUI
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.Name = "ExecutorMenu"
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 220, 0, 280) -- smaller fixed size
+frame.Position = UDim2.new(0, 10, 0, 10) -- top-left corner with 10px padding
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 35) -- smaller height
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "G Easy"
+title.Font = Enum.Font.Code
+title.TextScaled = true
+title.TextColor3 = Color3.fromRGB(0,255,150)
+
+-- TOGGLE CREATOR
+local toggles = {}
+local y = 0.15 -- start slightly lower
+
+local function createToggle(name, callback)
+	local btn = Instance.new("TextButton", frame)
+	btn.Size = UDim2.new(0.9, 0, 0, 30) -- fixed smaller height
+	btn.Position = UDim2.new(0.05, 0, y, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Font = Enum.Font.Code
+	btn.TextScaled = true
+	btn.Text = "[ OFF ] "..name
+
+	Instance.new("UICorner", btn)
+
+	local state = false
+	btn.MouseButton1Click:Connect(function()
+		state = not state
+		btn.Text = (state and "[ ON ] " or "[ OFF ] ") .. name
+		callback(state)
+	end)
+
+	y += 0.12 -- space between toggles
+end
+
+-- TOGGLE CREATOR
+local toggles = {}
+local y = 0.18
+
+local function createToggle(name, callback)
+	local btn = Instance.new("TextButton", frame)
+	btn.Size = UDim2.fromScale(0.9, 0.1)
+	btn.Position = UDim2.fromScale(0.05, y)
+	btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Font = Enum.Font.Code
+	btn.TextScaled = true
+	btn.Text = "[ OFF ] "..name
+
+	Instance.new("UICorner", btn)
+
+	local state = false
+	btn.MouseButton1Click:Connect(function()
+		state = not state
+		btn.Text = (state and "[ ON ] " or "[ OFF ] ") .. name
+		callback(state)
+	end)
+
+	y += 0.12
+end
+
+-- 🏃 SPEED
+createToggle("Speed", function(on)
+	local hum = getChar():WaitForChild("Humanoid")
+	hum.WalkSpeed = on and 60 or 16
+end)
+
+-- 📏 BIG / SMALL
+createToggle("Big", function(on)
+	getChar():ScaleTo(on and 3 or 1)
+end)
+
+-- 👻 NOCLIP
+local noclipConn
+createToggle("Noclip", function(on)
+	if on then
+		noclipConn = RunService.Stepped:Connect(function()
+			for _, p in pairs(getChar():GetDescendants()) do
+				if p:IsA("BasePart") then
+					p.CanCollide = false
+				end
+			end
+		end)
+	else
+		if noclipConn then noclipConn:Disconnect() end
+	end
+end)
+
+-- 👁️ ESP
+local espObjects = {}
+createToggle("ESP", function(on)
+	if on then
+		for _, plr in pairs(Players:GetPlayers()) do
+			if plr ~= player and plr.Character then
+				local h = Instance.new("Highlight")
+				h.FillColor = Color3.fromRGB(255,0,0)
+				h.OutlineColor = Color3.new(1,1,1)
+				h.Parent = plr.Character
+				espObjects[plr] = h
+			end
+		end
+	else
+		for _, h in pairs(espObjects) do
+			if h then h:Destroy() end
+		end
+		espObjects = {}
+	end
+end)
+
+-- ✈️ FLY
+local flyConn, bv
+createToggle("Fly", function(on)
+	local char = getChar()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+
+	if on then
+		bv = Instance.new("BodyVelocity")
+		bv.MaxForce = Vector3.new(1e9,1e9,1e9)
+		bv.Parent = hrp
+
+		flyConn = RunService.RenderStepped:Connect(function()
+			local cam = workspace.CurrentCamera
+			local move = Vector3.zero
+			if UIS:IsKeyDown(Enum.KeyCode.W) then move += cam.CFrame.LookVector end
+			if UIS:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
+			if UIS:IsKeyDown(Enum.KeyCode.A) then move -= cam.CFrame.RightVector end
+			if UIS:IsKeyDown(Enum.KeyCode.D) then move += cam.CFrame.RightVector end
+			if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
+			if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.new(0,1,0) end
+			bv.Velocity = move * 60
+		end)
+	else
+		if flyConn then flyConn:Disconnect() end
+		if bv then bv:Destroy() end
+	end
+end)
