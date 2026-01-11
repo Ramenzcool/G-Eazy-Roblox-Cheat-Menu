@@ -162,3 +162,38 @@ createToggle("Fly", function(on)
 		if bv then bv:Destroy() end
 	end
 end)
+
+--// THEMES
+local Themes = {
+	Dark = {20,20,20, 35,35,35, 0,255,150},
+	Red  = {30,0,0, 120,0,0, 255,80,80},
+	Blue = {10,10,30, 0,120,255, 0,255,255}
+}
+
+local function applyTheme(t)
+	frame.BackgroundColor3 = Color3.fromRGB(t[1],t[2],t[3])
+	for _, v in pairs(frame:GetDescendants()) do
+		if v:IsA("TextButton") then
+			v.BackgroundColor3 = Color3.fromRGB(t[4],t[5],t[6])
+		end
+	end
+	title.TextColor3 = Color3.fromRGB(t[7],t[8],t[9])
+end
+
+local ty = 0.05
+for name, theme in pairs(Themes) do
+	createToggle(themePage, ty, name.." Theme", function(on)
+		if on then applyTheme(theme) end
+	end)
+	ty += 0.14
+end
+
+applyTheme(Themes.Dark)
+
+--// MENU TOGGLE
+UIS.InputBegan:Connect(function(i, gp)
+	if gp then return end
+	if i.KeyCode == Enum.KeyCode.RightShift then
+		frame.Visible = not frame.Visible
+	end
+end)
