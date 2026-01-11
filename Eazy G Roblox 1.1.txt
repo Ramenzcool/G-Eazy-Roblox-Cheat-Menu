@@ -1,6 +1,3 @@
--- Do not copy and say its yours, any code found copied will be reported and requested deleted
-
-
 -- SERVICES
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -14,20 +11,19 @@ local function getChar()
 end
 
 -- GUI
--- GUI
 local gui = Instance.new("ScreenGui", player.PlayerGui)
 gui.Name = "ExecutorMenu"
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 220, 0, 280) -- smaller fixed size
-frame.Position = UDim2.new(0, 10, 0, 10) -- top-left corner with 10px padding
+frame.Size = UDim2.new(0, 220, 0, 280)
+frame.Position = UDim2.new(0, 10, 0, 10)
 frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 frame.BorderSizePixel = 0
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
 
 local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0, 35) -- smaller height
+title.Size = UDim2.new(1, 0, 0, 35)
 title.Position = UDim2.new(0, 0, 0, 0)
 title.BackgroundTransparency = 1
 title.Text = "G Easy"
@@ -35,40 +31,12 @@ title.Font = Enum.Font.Code
 title.TextScaled = true
 title.TextColor3 = Color3.fromRGB(0,255,150)
 
--- TOGGLE CREATOR
-local toggles = {}
-local y = 0.15 -- start slightly lower
-
-local function createToggle(name, callback)
-	local btn = Instance.new("TextButton", frame)
-	btn.Size = UDim2.new(0.9, 0, 0, 30) -- fixed smaller height
+-- MAIN TOGGLE FUNCTION
+local y = 0.15
+local function createToggle(parent, name, callback)
+	local btn = Instance.new("TextButton", parent)
+	btn.Size = UDim2.new(0.9, 0, 0, 30)
 	btn.Position = UDim2.new(0.05, 0, y, 0)
-	btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
-	btn.TextColor3 = Color3.new(1,1,1)
-	btn.Font = Enum.Font.Code
-	btn.TextScaled = true
-	btn.Text = "[ OFF ] "..name
-
-	Instance.new("UICorner", btn)
-
-	local state = false
-	btn.MouseButton1Click:Connect(function()
-		state = not state
-		btn.Text = (state and "[ ON ] " or "[ OFF ] ") .. name
-		callback(state)
-	end)
-
-	y += 0.12 -- space between toggles
-end
-
--- TOGGLE CREATOR
-local toggles = {}
-local y = 0.18
-
-local function createToggle(name, callback)
-	local btn = Instance.new("TextButton", frame)
-	btn.Size = UDim2.fromScale(0.9, 0.1)
-	btn.Position = UDim2.fromScale(0.05, y)
 	btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
 	btn.TextColor3 = Color3.new(1,1,1)
 	btn.Font = Enum.Font.Code
@@ -87,20 +55,21 @@ local function createToggle(name, callback)
 	y += 0.12
 end
 
--- 🏃 SPEED
-createToggle("Speed", function(on)
+--// MAIN TOGGLES
+-- SPEED
+createToggle(frame, "Speed", function(on)
 	local hum = getChar():WaitForChild("Humanoid")
 	hum.WalkSpeed = on and 60 or 16
 end)
 
--- 📏 BIG / SMALL
-createToggle("Big", function(on)
+-- BIG/SMALL
+createToggle(frame, "Big", function(on)
 	getChar():ScaleTo(on and 3 or 1)
 end)
 
--- 👻 NOCLIP
+-- NOCLIP
 local noclipConn
-createToggle("Noclip", function(on)
+createToggle(frame, "Noclip", function(on)
 	if on then
 		noclipConn = RunService.Stepped:Connect(function()
 			for _, p in pairs(getChar():GetDescendants()) do
@@ -114,9 +83,9 @@ createToggle("Noclip", function(on)
 	end
 end)
 
--- 👁️ ESP
+-- ESP
 local espObjects = {}
-createToggle("ESP", function(on)
+createToggle(frame, "ESP", function(on)
 	if on then
 		for _, plr in pairs(Players:GetPlayers()) do
 			if plr ~= player and plr.Character then
@@ -135,9 +104,9 @@ createToggle("ESP", function(on)
 	end
 end)
 
--- ✈️ FLY
+-- FLY
 local flyConn, bv
-createToggle("Fly", function(on)
+createToggle(frame, "Fly", function(on)
 	local char = getChar()
 	local hrp = char:WaitForChild("HumanoidRootPart")
 
@@ -164,6 +133,12 @@ createToggle("Fly", function(on)
 end)
 
 --// THEMES
+-- Create a separate theme frame
+local themePage = Instance.new("Frame", frame)
+themePage.Size = UDim2.new(1, 0, 0.7, 0)
+themePage.Position = UDim2.new(0, 0, 0.25, 0)
+themePage.BackgroundTransparency = 1
+
 local Themes = {
 	Dark = {20,20,20, 35,35,35, 0,255,150},
 	Red  = {30,0,0, 120,0,0, 255,80,80},
@@ -180,17 +155,17 @@ local function applyTheme(t)
 	title.TextColor3 = Color3.fromRGB(t[7],t[8],t[9])
 end
 
-local ty = 0.05
+local ty = 0
 for name, theme in pairs(Themes) do
-	createToggle(themePage, ty, name.." Theme", function(on)
+	createToggle(themePage, name.." Theme", function(on)
 		if on then applyTheme(theme) end
 	end)
-	ty += 0.14
+	ty += 0.12
 end
 
 applyTheme(Themes.Dark)
 
---// MENU TOGGLE
+-- MENU TOGGLE
 UIS.InputBegan:Connect(function(i, gp)
 	if gp then return end
 	if i.KeyCode == Enum.KeyCode.RightShift then
